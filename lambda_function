@@ -1,0 +1,223 @@
+import json
+import boto3
+import urllib.request
+
+print('Loading function')
+
+# Initialize AWS clients
+s3 = boto3.client('s3')
+BUCKET_NAME = 'romansbuildspacedubai'
+FOLDER_NAME = 'dubai'
+
+def send_telegram_message(chat_id, text):
+    # Replace with your actual Telegram Bot API token 
+   
+    url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
+    
+    payload = {
+        'chat_id': chat_id,
+        'text': text,
+        "parse_mode": "HTML"
+    }
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    data = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(url, data, headers)
+    
+    ngrok_url = 'https://your-ngrok-url.ngrok.io/run_crew'
+    
+    try:
+        response = requests.post(ngrok_url, json={
+            'inputs': event.get('inputs', {})
+        })
+        
+        return {
+            'statusCode': response.status_code,
+            'body': response.json()
+
+    try:
+        response = urllib.request.urlopen(req)
+        return response.read().decode('utf-8')
+    except urllib.error.HTTPError as e:
+        print(f'HTTPError: {e.code} - {e.reason}')
+        print(e.read().decode('utf-8'))
+    except urllib.error.URLError as e:
+        print(f'URLError: {e.reason}')
+
+def fetch_s3_data(topic, subfolder=None):
+    key = f"{FOLDER_NAME}/{topic}"
+    if subfolder:
+        key += f"/{subfolder}.json"
+    else:
+        key += f".json"
+    print(key)
+    try:
+        response = s3.get_object(Bucket=BUCKET_NAME, Key=key)
+        data = json.loads(response['Body'].read().decode('utf-8'))
+        return data
+    
+    except Exception as e:
+        print(e)
+        return None
+
+def add_to_request_json(request_type, request_value):
+    s3 = boto3.client('s3')
+    bucket_name = "romansbuildspacedubai"
+    
+    if request_type == "city":
+        file_key = "dubai/request/city.json"
+        new_entry = {"city": request_value, "comment": ""}
+    elif request_type == "feature":
+        file_key = "dubai/request/feature.json"
+        new_entry = {"feature": request_value, "comment": ""}
+    
+    try:
+        obj = s3.get_object(Bucket=bucket_name, Key=file_key)
+        data1 = json.loads(obj['Body'].read().decode('utf-8'))
+    except s3.exceptions.NoSuchKey:
+        data1 = []
+    
+    data1.append(new_entry)
+    print(new_entry)
+    print(data1)
+    s3.put_object(Bucket=bucket_name, Key=file_key, Body=json.dumps(data1, indent=2))
+    
+def add_to_location_json(new_entry):
+    s3 = boto3.client('s3')
+    bucket_name = "romansbuildspacedubai"
+
+    file_key = "locationhistory/currentlocation.json"
+
+    try:
+        obj = s3.get_object(Bucket=bucket_name, Key=file_key)
+        data1 = json.loads(obj['Body'].read().decode('utf-8'))
+    except s3.exceptions.NoSuchKey:
+        data1 = []
+    
+    data1 = [entry for entry in data1 if entry.get('id') != new_entry.get('id')]
+    data1.append(new_entry)
+    
+    print(new_entry)
+    print(data1)
+    s3.put_object(Bucket=bucket_name, Key=file_key, Body=json.dumps(data1, indent=2))
+    
+def lambda_handler(event, context):
+    try:
+        body = json.loads(event['body'])
+        print(body)
+        
+        # Handle location updates
+        if body.get('message', {}).get('location'):
+            new_entry = {
+                'id': body['message']['from']['id'],
+                'latitude': body['message']['location']['latitude'],
+                'longitude': body['message']['location']['longitude']
+            }
+            add_to_location_json(new_entry)
+            send_telegram_message(
+                body['message']['chat']['id'], 
+                "Location received and updated successfully!"
+            )
+            return {
+                'statusCode': 200,
+                'body': json.dumps('Location updated!')
+            }
+
+        # Handle text messages
+        if body['message'].get('text'):
+            message = body['message'].get('text').strip().lower()
+        else:
+            message = 'No message'
+        
+        chat_id = body['message']['chat']['id']
+
+        # Send welcome message
+        welcome_message = (
+    "Hello! Roman welcomes you! \n"
+    "Can you please share your current location so we can get started? \n"
+    "Or choose from these options: \n"
+    "1. Food Information\n"
+    "2. Shopping\n"
+    "3. Monuments\n"
+    "4. Local Attractions\n"
+    "5. Security Tips\n"
+    "6. Health Tips\n"
+    "7. Scams to be Careful Of\n"
+    "8. City Travel\n"
+    "9. Instagram Spots\n"
+    "10. Cultural Experiences\n"
+    "11. Nightlife\n"
+    "12. Emergency Numbers\n"
+    "13. Request a City\n"
+    "14. Request a Feature"
+        )
+
+        if message.isdigit() and 1 <= int(message) <= 12:
+            # Topic selection logic remains the same as in original code
+            topic_mapping = {
+                "1": ("food", "cuisine"),
+                "2": ("shopping", "market_type"),
+                # ... rest of the mapping
+            }
+            
+            if license = 0:
+                response = await client.license.mint_license_tokens({
+    "licenseTermsId": "1",
+    "licensorIpId": "0xC92EC2f4c86458AFee7DD9EB5d8c57920BfCD0Ba",
+    "receiver": "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+    "amount": 1,
+    "txOptions": {"waitForTransaction": True}
+})
+
+                console.log(`License Token minted at transaction hash ${response.txHash}, License IDs: ${response.licenseTokenIds}`)
+                license = 1
+            
+            selected_topic, subfolder = topic_mapping[message]
+            data = fetch_s3_data(selected_topic, subfolder)
+
+            if data:
+                # Formatting logic remains the same
+                topic_text = {
+                    "food": "Hey, here is the food information you requested:\n\n",
+                    # ... other topic texts
+                }
+
+                placeholder_text = topic_text.get(selected_topic, "")
+                formatted_message = placeholder_text
+
+                for item in data[:11]:  # Limit to first 11 items
+                    for key, value in item.items():
+                        if isinstance(value, (str, int, float)):
+                            formatted_message += f"<b>{key}</b>: {value}\n"
+    
+                send_telegram_message(chat_id, formatted_message)
+            else:
+                send_telegram_message(chat_id, "Sorry, I couldn't fetch the information. Please try again later.")
+
+        elif message.startswith("13"):
+            requested_city = message[2:].strip()
+            add_to_request_json("city", requested_city)
+            send_telegram_message(chat_id, f"Your request for city '{requested_city}' has been noted.")
+        
+        elif message.startswith("14"):
+            requested_feature = message[2:].strip()
+            add_to_request_json("feature", requested_feature)
+            send_telegram_message(chat_id, f"Your request for feature '{requested_feature}' has been noted.")
+
+        else:
+            # Invalid input, send welcome message again
+            send_telegram_message(chat_id, welcome_message)
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps('Message sent!')
+        }
+    
+    except Exception as e:
+        print(e)
+        return {
+            'statusCode': 500,
+            'body': json.dumps(f'Error occurred: {str(e)}')
+        }
